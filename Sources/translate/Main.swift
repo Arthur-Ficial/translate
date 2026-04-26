@@ -5,6 +5,10 @@ import Darwin
 @main
 public enum TranslateMain: Sendable {
     public static func main() async {
+        // Hard-block every URLSession HTTP/HTTPS/WS/WSS attempt at runtime.
+        // translate is 100% on-device by promise -- this is the enforcement.
+        NetworkGuard.install()
+
         do {
             var command = try TranslateCommand.parse()
             try await command.run()

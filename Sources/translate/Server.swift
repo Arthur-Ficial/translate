@@ -89,7 +89,7 @@ public final class TranslateServer: @unchecked Sendable {
         }
         router.get("/spec") { _, _ in
             TranslateServer.jsonResponse(
-                "{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"translate\",\"version\":\"0.1.0\"},\"paths\":{\"/translate\":{},\"/detect\":{},\"/languages\":{}}}"
+                "{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"translate\",\"version\":\"0.1.1\"},\"paths\":{\"/translate\":{},\"/detect\":{},\"/languages\":{}}}"
             )
         }
         router.get("/frontend/settings") { _, _ in

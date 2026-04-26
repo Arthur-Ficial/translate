@@ -11,7 +11,7 @@ public struct TranslateCommand: AsyncParsableCommand, Sendable {
         --file, or stdin; writes translated text to stdout; and writes errors or
         progress to stderr.
         """,
-        version: "0.1.0"
+        version: "0.1.1"
     )
 
     @Option(name: .long, help: "Target language, as a BCP-47 identifier such as de, en, ja, or de-AT.")

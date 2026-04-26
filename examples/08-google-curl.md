@@ -7,7 +7,7 @@
 ### GET /language/translate/v2/languages
 
 ```sh
-curl -sf http://127.0.0.1:50644/language/translate/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps({"sample": d["data"]["languages"][:3]}, indent=2))'
+curl -sf http://127.0.0.1:50855/language/translate/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps({"sample": d["data"]["languages"][:3]}, indent=2))'
 ```
 
 ```

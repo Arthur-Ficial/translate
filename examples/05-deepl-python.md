@@ -8,7 +8,7 @@ Drives `translate --serve` with the real `deepl` Python SDK by overriding `serve
 
 ```python
 import deepl
-t = deepl.Translator("any-token", server_url="http://127.0.0.1:50644")
+t = deepl.Translator("any-token", server_url="http://127.0.0.1:50855")
 langs = t.get_target_languages()
 print(f"got {len(langs)} target languages, first three: {[l.code for l in langs[:3]]}")
 ```
@@ -24,7 +24,7 @@ exit code: `0`
 
 ```python
 import deepl
-t = deepl.Translator("any-token", server_url="http://127.0.0.1:50644")
+t = deepl.Translator("any-token", server_url="http://127.0.0.1:50855")
 u = t.get_usage()
 print(f"character_count={u.character.count} character_limit={u.character.limit}")
 ```

@@ -7,7 +7,7 @@
 ### GET /language/translate/v2/languages
 
 ```sh
-curl -sf http://127.0.0.1:51052/language/translate/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps({"sample": d["data"]["languages"][:3]}, indent=2))'
+curl -sf http://127.0.0.1:52537/language/translate/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps({"sample": d["data"]["languages"][:3]}, indent=2))'
 ```
 
 ```
@@ -34,15 +34,42 @@ exit code: `0`
 
 ### POST /language/translate/v2 -- single q (form)
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/language/translate/v2 --data-urlencode 'q=Hallo Welt.' --data-urlencode 'target=en' --data-urlencode 'source=de'
+```
+
+```
+{"data":{"translations":[{"detectedSourceLanguage":"de","translatedText":"Hello world."}]}}
+```
+
+exit code: `0`
 
 
 ### POST /language/translate/v2 -- repeated q params (batch)
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/language/translate/v2 --data-urlencode 'q=Hallo' --data-urlencode 'q=Welt' --data-urlencode 'target=en' --data-urlencode 'source=de'
+```
+
+```
+{"data":{"translations":[{"detectedSourceLanguage":"de","translatedText":"Hello"},{"detectedSourceLanguage":"de","translatedText":"World"}]}}
+```
+
+exit code: `0`
 
 
 ### POST /language/translate/v2 -- JSON body
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/language/translate/v2 \
+  -H "Content-Type: application/json" \
+  --data '{"q":"Hallo","target":"en","source":"de"}'
+
+```
+
+```
+{"data":{"translations":[{"detectedSourceLanguage":"de","translatedText":"Hello"}]}}
+```
+
+exit code: `0`
 

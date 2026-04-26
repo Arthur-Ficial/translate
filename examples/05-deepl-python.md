@@ -8,7 +8,7 @@ Drives `translate --serve` with the real `deepl` Python SDK by overriding `serve
 
 ```python
 import deepl
-t = deepl.Translator("any-token", server_url="http://127.0.0.1:51052")
+t = deepl.Translator("any-token", server_url="http://127.0.0.1:52537")
 langs = t.get_target_languages()
 print(f"got {len(langs)} target languages, first three: {[l.code for l in langs[:3]]}")
 ```
@@ -24,7 +24,7 @@ exit code: `0`
 
 ```python
 import deepl
-t = deepl.Translator("any-token", server_url="http://127.0.0.1:51052")
+t = deepl.Translator("any-token", server_url="http://127.0.0.1:52537")
 u = t.get_usage()
 print(f"character_count={u.character.count} character_limit={u.character.limit}")
 ```
@@ -38,10 +38,37 @@ exit code: `0`
 
 ### deepl.Translator.translate_text() -- single string, drop-in usage
 
-_skipped — de-en model not installed_
+```python
+import deepl
+t = deepl.Translator("any-token", server_url="http://127.0.0.1:52537")
+r = t.translate_text("Hallo Welt.", source_lang="DE", target_lang="EN-US")
+print("text:", r.text)
+print("detected_source_lang:", r.detected_source_lang)
+```
+
+```
+text: Hello world.
+detected_source_lang: DE
+```
+
+exit code: `0`
 
 
 ### deepl.Translator.translate_text() -- list batch
 
-_skipped — de-en model not installed_
+```python
+import deepl
+t = deepl.Translator("any-token", server_url="http://127.0.0.1:52537")
+rs = t.translate_text(["Hallo", "Welt", "Guten Morgen"],
+                      source_lang="DE", target_lang="EN-US")
+for r in rs: print(r.text)
+```
+
+```
+Hello
+World
+Good morning
+```
+
+exit code: `0`
 

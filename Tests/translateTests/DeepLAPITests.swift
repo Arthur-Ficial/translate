@@ -58,20 +58,21 @@ final class DeepLAPITests: XCTestCase {
 
     func testResponseEncoderShape() {
         let payload = DeepLResponse(translations: [
-            .init(detectedSourceLanguage: "DE", text: "Hello"),
-            .init(detectedSourceLanguage: "DE", text: "World")
+            .init(detectedSourceLanguage: "DE", text: "Hello", billedCharacters: 5),
+            .init(detectedSourceLanguage: "DE", text: "World", billedCharacters: 5)
         ])
         let encoded = payload.toJSON()
-        // exact, byte-stable shape
+        // exact, byte-stable shape -- the official deepl Python SDK reads
+        // detected_source_language, text, and billed_characters.
         XCTAssertEqual(
             encoded,
-            #"{"translations":[{"detected_source_language":"DE","text":"Hello"},{"detected_source_language":"DE","text":"World"}]}"#
+            #"{"translations":[{"detected_source_language":"DE","text":"Hello","billed_characters":5},{"detected_source_language":"DE","text":"World","billed_characters":5}]}"#
         )
     }
 
     func testResponseEncoderEscapesQuotes() {
         let payload = DeepLResponse(translations: [
-            .init(detectedSourceLanguage: "DE", text: "say \"hi\"")
+            .init(detectedSourceLanguage: "DE", text: "say \"hi\"", billedCharacters: 7)
         ])
         let encoded = payload.toJSON()
         XCTAssertTrue(encoded.contains(#"\"hi\""#))

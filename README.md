@@ -1,5 +1,11 @@
 # translate
 
+[![macOS 26+](https://img.shields.io/badge/macOS-26+-blue.svg)](https://www.apple.com/macos/)
+[![Swift 6](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tests: 136](https://img.shields.io/badge/tests-136-brightgreen.svg)](Tests/translateTests/)
+[![On-device](https://img.shields.io/badge/translation-on--device-purple.svg)](#why-on-device)
+
 **A deterministic, on-device translator for macOS.** A UNIX-style command and a drop-in HTTP server for DeepL, LibreTranslate, and Google v2 — all running 100% on-device using Apple's Translation framework.
 
 `translate` is a tiny macOS CLI built as a UNIX filter: stdin in, stdout out, stderr for errors and optional progress. It uses Apple's on-device Translation framework on macOS Tahoe, auto-detects the source language with NaturalLanguage, reuses a single translation session per run, and batches work wherever possible. With `--serve` it exposes the same engine over HTTP, byte-compatible with DeepL `/v2/*`, LibreTranslate `/translate /detect /languages`, and Google `/language/translate/v2/*` — so existing client libraries point at it unchanged.

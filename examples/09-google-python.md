@@ -6,10 +6,39 @@ The v2 REST shape spoken by direct HTTP clients (no Google credentials needed ag
 
 ### Google v2 via raw requests -- no Google credentials needed
 
-_skipped — de-en model not installed_
+```python
+import requests
+r = requests.post("http://127.0.0.1:52537/language/translate/v2",
+                  data={"q":"Hallo Welt.","target":"en","source":"de"},
+                  timeout=5)
+r.raise_for_status()
+body = r.json()
+print(body["data"]["translations"][0])
+```
+
+```
+{'detectedSourceLanguage': 'de', 'translatedText': 'Hello world.'}
+```
+
+exit code: `0`
 
 
 ### Google v2 via requests -- multiple q params (batch)
 
-_skipped — de-en model not installed_
+```python
+import requests
+r = requests.post("http://127.0.0.1:52537/language/translate/v2",
+                  data=[("q","Hallo"),("q","Welt"),("target","en"),("source","de")],
+                  timeout=5)
+r.raise_for_status()
+for t in r.json()["data"]["translations"]:
+    print(t["translatedText"])
+```
+
+```
+Hello
+World
+```
+
+exit code: `0`
 

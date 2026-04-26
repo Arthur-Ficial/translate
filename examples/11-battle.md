@@ -6,20 +6,89 @@ Big batches, very long single inputs, mixed-script Unicode, protected URLs/email
 
 ### DeepL batch of 50 short sentences in one request
 
-_skipped — de-en model not installed_
+```python
+import requests
+import time
+
+texts = [f"Satz Nummer {i} mit etwas Inhalt." for i in range(50)]
+body = [("text", t) for t in texts]
+body.append(("target_lang", "EN"))
+body.append(("source_lang", "DE"))
+
+start = time.time()
+r = requests.post("http://127.0.0.1:52537/v2/translate", data=body, timeout=20)
+elapsed = time.time() - start
+r.raise_for_status()
+translations = r.json()["translations"]
+print(f"requested {len(texts)} translations -> received {len(translations)} in {elapsed:.2f}s")
+print("first three texts:", [t["text"] for t in translations[:3]])
+```
+
+```
+requested 50 translations -> received 50 in 0.89s
+first three texts: ['Sentence number 0 with some content.', 'Sentence number 1 with some content.', 'Sentence number 2 with some content.']
+```
+
+exit code: `0`
 
 
 ### LibreTranslate single very-long input (~2400 chars)
 
-_skipped — de-en model not installed_
+```python
+import requests
+text = "Hallo Welt. " * 200  # ~2400 chars
+r = requests.post("http://127.0.0.1:52537/translate",
+                  json={"q": text, "source": "de", "target": "en", "format": "text"}, timeout=20)
+r.raise_for_status()
+out = r.json()["translatedText"]
+print(f"input chars: {len(text)}, output chars: {len(out)}")
+```
+
+```
+input chars: 2400, output chars: 2599
+```
+
+exit code: `0`
 
 
 ### Hardened: URLs, emails, and inline code survive translation
 
-_skipped — de-en model not installed_
+```python
+import requests
+text = "Klick https://example.com/a/b und schreibe a@b.com -- code: `print(1)` -- ende."
+r = requests.post("http://127.0.0.1:52537/v2/translate",
+                  data={"text": text, "target_lang": "EN", "source_lang": "DE"}, timeout=10)
+r.raise_for_status()
+body = r.json()["translations"][0]["text"]
+print("output:", body)
+for must in ["https://example.com/a/b", "a@b.com", "`print(1)`"]:
+    assert must in body, f"missing {must!r} in {body!r}"
+print("OK -- all protected spans preserved")
+```
+
+```
+output: Clickhttps://example.com/a/bAnd writea@b.com-- code:`print(1)`-- end.
+OK -- all protected spans preserved
+```
+
+exit code: `0`
 
 
 ### Mixed-script Unicode (emoji + Arabic + Latin) through LibreTranslate
 
-_skipped — de-en model not installed_
+```python
+import requests
+text = "Hallo Welt 🌍 mit Emoji und العربية gemischt."
+r = requests.post("http://127.0.0.1:52537/translate",
+                  json={"q": text, "source": "auto", "target": "en"}, timeout=10)
+r.raise_for_status()
+body = r.json()
+print(body)
+```
+
+```
+{'detectedLanguage': {'confidence': 100, 'language': 'de'}, 'translatedText': 'Hello world 🌍 mixed with emoji and العربية.'}
+```
+
+exit code: `0`
 

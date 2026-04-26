@@ -6,5 +6,45 @@ The same prompt, sent through three different protocols, must return identical t
 
 ### Same input through all three APIs returns identical output
 
-_skipped — de-en model not installed_
+```python
+import json
+import requests
+from libretranslatepy import LibreTranslateAPI
+
+text = "Guten Morgen, wie geht es dir?"
+
+# 1) DeepL surface
+r = requests.post("http://127.0.0.1:52537/v2/translate",
+                  data={"text": text, "target_lang": "EN", "source_lang": "DE"}, timeout=5)
+r.raise_for_status()
+deepl_text = r.json()["translations"][0]["text"]
+
+# 2) LibreTranslate surface
+api = LibreTranslateAPI("http://127.0.0.1:52537")
+libre_text = api.translate(text, "de", "en")
+
+# 3) Google v2 surface
+r = requests.post("http://127.0.0.1:52537/language/translate/v2",
+                  data={"q": text, "target": "en", "source": "de"}, timeout=5)
+r.raise_for_status()
+google_text = r.json()["data"]["translations"][0]["translatedText"]
+
+print(json.dumps({
+    "deepl": deepl_text,
+    "libre": libre_text,
+    "google": google_text,
+    "all_equal": deepl_text == libre_text == google_text,
+}, indent=2))
+```
+
+```
+{
+  "deepl": "Good morning, how are you?",
+  "libre": "Good morning, how are you?",
+  "google": "Good morning, how are you?",
+  "all_equal": true
+}
+```
+
+exit code: `0`
 

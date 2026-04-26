@@ -49,7 +49,7 @@ final class ServerTests: XCTestCase {
         let json = String(data: data, encoding: .utf8) ?? ""
         XCTAssertEqual(
             json,
-            #"{"translations":[{"detected_source_language":"DE","text":"HALLO"}]}"#
+            #"{"translations":[{"detected_source_language":"DE","text":"HALLO","billed_characters":5}]}"#
         )
     }
 

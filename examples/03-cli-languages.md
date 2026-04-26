@@ -6,32 +6,80 @@ Same shape, many pairs. Tests skip themselves when the pair is not installed loc
 
 ### French to English
 
-_skipped — fr-en model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to en --from fr --no-install --quiet 'Bonjour le monde, comment ça va aujourd'"'"'hui ?'
+```
+
+```
+Hello everyone, how are you today?
+```
+
+exit code: `0`
 
 
 ### Japanese to English
 
-_skipped — ja-en model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to en --from ja --no-install --quiet 'これは翻訳のテストです。'
+```
+
+```
+This is a translation test.
+```
+
+exit code: `0`
 
 
 ### Spanish to English
 
-_skipped — es-en model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to en --from es --no-install --quiet 'Hola mundo, ¿cómo estás hoy?'
+```
+
+```
+Hello world, how are you today?
+```
+
+exit code: `0`
 
 
 ### Italian to English
 
-_skipped — it-en model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to en --from it --no-install --quiet 'Ciao mondo, come stai oggi?'
+```
+
+```
+Hello world, how are you today?
+```
+
+exit code: `0`
 
 
 ### Russian to English
 
-_skipped — ru-en model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to en --from ru --no-install --quiet 'Привет, мир! Как дела сегодня?'
+```
+
+```
+Hello, world! How are you doing today?
+```
+
+exit code: `0`
 
 
 ### Chinese to English
 
-_skipped — zh-en model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to en --from zh --no-install --quiet '你好世界，今天过得怎么样？'
+```
+
+```
+Hello, world. How are you doing today?
+```
+
+exit code: `0`
 
 
 ### Arabic to English

@@ -7,19 +7,19 @@ Generation also doubles as a battle-test: a scene fails if its expected substrin
 ## Catalog
 
 - [01 · CLI basics](examples/01-cli-basics.md) — 8 passed
-- [02 · CLI translation](examples/02-cli-translate.md) — 0 passed, 8 skipped
-- [03 · CLI across many language pairs](examples/03-cli-languages.md) — 0 passed, 7 skipped
-- [04 · DeepL HTTP API · curl](examples/04-deepl-curl.md) — 3 passed, 3 skipped
-- [05 · DeepL HTTP API · official Python SDK](examples/05-deepl-python.md) — 2 passed, 2 skipped
-- [06 · LibreTranslate HTTP API · curl](examples/06-libretranslate-curl.md) — 2 passed, 3 skipped
-- [07 · LibreTranslate HTTP API · libretranslatepy](examples/07-libretranslate-python.md) — 2 passed, 1 skipped
-- [08 · Google Translate v2 HTTP API · curl](examples/08-google-curl.md) — 1 passed, 3 skipped
-- [09 · Google Translate v2 HTTP API · requests](examples/09-google-python.md) — 0 passed, 2 skipped
-- [10 · Cross-API consistency](examples/10-cross-api-consistency.md) — 0 passed, 1 skipped
-- [11 · Battle tests](examples/11-battle.md) — 0 passed, 4 skipped
+- [02 · CLI translation](examples/02-cli-translate.md) — 8 passed
+- [03 · CLI across many language pairs](examples/03-cli-languages.md) — 6 passed, 1 skipped
+- [04 · DeepL HTTP API · curl](examples/04-deepl-curl.md) — 6 passed
+- [05 · DeepL HTTP API · official Python SDK](examples/05-deepl-python.md) — 4 passed
+- [06 · LibreTranslate HTTP API · curl](examples/06-libretranslate-curl.md) — 5 passed
+- [07 · LibreTranslate HTTP API · libretranslatepy](examples/07-libretranslate-python.md) — 3 passed
+- [08 · Google Translate v2 HTTP API · curl](examples/08-google-curl.md) — 4 passed
+- [09 · Google Translate v2 HTTP API · requests](examples/09-google-python.md) — 2 passed
+- [10 · Cross-API consistency](examples/10-cross-api-consistency.md) — 1 passed
+- [11 · Battle tests](examples/11-battle.md) — 4 passed
 
 ## Summary
 
-- passed:  **18**
-- skipped: **34**  (model not installed)
+- passed:  **51**
+- skipped: **1**  (model not installed)
 - failed:  **0**

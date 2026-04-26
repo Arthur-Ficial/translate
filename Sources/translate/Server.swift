@@ -33,19 +33,21 @@ public final class TranslateServer: @unchecked Sendable {
     public func run() async throws {
         let router = Router()
 
+        // CORS preflight for any browser client. Match on .options method only.
+        router.on("/", method: .options) { _, _ in
+            TranslateServer.corsPreflight()
+        }
+        router.on("/{path*}", method: .options) { _, _ in
+            TranslateServer.corsPreflight()
+        }
+
         router.get("/health") { _, _ in
-            Response(
-                status: .ok,
-                headers: [.contentType: "application/json"],
-                body: .init(byteBuffer: .init(string: "{\"ok\":true,\"service\":\"translate\"}"))
+            TranslateServer.jsonResponse(
+                "{\"ok\":true,\"service\":\"translate\"}"
             )
         }
         router.get("/healthz") { _, _ in
-            Response(
-                status: .ok,
-                headers: [.contentType: "application/json"],
-                body: .init(byteBuffer: .init(string: "{\"ok\":true}"))
-            )
+            TranslateServer.jsonResponse("{\"ok\":true}")
         }
 
         // DeepL surface
@@ -61,10 +63,8 @@ public final class TranslateServer: @unchecked Sendable {
             TranslateServer.languagesJSON(scheme: .deepL)
         }
         router.get("/v2/usage") { _, _ in
-            Response(
-                status: .ok,
-                headers: [.contentType: "application/json"],
-                body: .init(byteBuffer: .init(string: "{\"character_count\":0,\"character_limit\":1000000000}"))
+            TranslateServer.jsonResponse(
+                "{\"character_count\":0,\"character_limit\":1000000000}"
             )
         }
 
@@ -86,6 +86,16 @@ public final class TranslateServer: @unchecked Sendable {
         }
         router.get("/languages") { _, _ in
             TranslateServer.languagesJSON(scheme: .libre)
+        }
+        router.get("/spec") { _, _ in
+            TranslateServer.jsonResponse(
+                "{\"openapi\":\"3.0.0\",\"info\":{\"title\":\"translate\",\"version\":\"0.1.0\"},\"paths\":{\"/translate\":{},\"/detect\":{},\"/languages\":{}}}"
+            )
+        }
+        router.get("/frontend/settings") { _, _ in
+            TranslateServer.jsonResponse(
+                "{\"apiKeys\":false,\"charLimit\":-1,\"frontendTimeout\":500,\"keyRequired\":false,\"language\":{\"source\":{\"code\":\"auto\",\"name\":\"Auto Detect\"},\"target\":{\"code\":\"en\",\"name\":\"English\"}},\"suggestions\":false,\"supportedFilesFormat\":[]}"
+            )
         }
 
         // Google v2 surface
@@ -129,12 +139,14 @@ public final class TranslateServer: @unchecked Sendable {
         let parsed: DeepLRequest
         do {
             parsed = try await readDeepLBody(request: request)
+        } catch let error as TranslateError {
+            return deepLErrorResponse(.badRequest, message: error.description)
         } catch {
-            return errorResponse(.badRequest, message: error.localizedDescription)
+            return deepLErrorResponse(.badRequest, message: error.localizedDescription)
         }
 
         guard let target = DeepLRequest.normalizeLang(parsed.targetLang) else {
-            return errorResponse(.badRequest, message: "invalid target_lang")
+            return deepLErrorResponse(.badRequest, message: "invalid target_lang")
         }
 
         let sourceCodeOpt = parsed.sourceLang.flatMap(DeepLRequest.normalizeLang)
@@ -149,7 +161,7 @@ public final class TranslateServer: @unchecked Sendable {
             do {
                 detection = try detector.detect(in: joined)
             } catch {
-                return errorResponse(.badRequest, message: "could not detect source language")
+                return deepLErrorResponse(.badRequest, message: "could not detect source language")
             }
         }
 
@@ -159,9 +171,9 @@ public final class TranslateServer: @unchecked Sendable {
         do {
             try await translator.prepare(source: sourceLang, target: targetLang, noInstall: false, quiet: true)
         } catch let error as TranslateError {
-            return errorResponse(.badRequest, message: error.description)
+            return deepLErrorResponse(.badRequest, message: error.description)
         } catch {
-            return errorResponse(.badRequest, message: error.localizedDescription)
+            return deepLErrorResponse(.badRequest, message: error.localizedDescription)
         }
 
         let translated: [String]
@@ -173,19 +185,19 @@ public final class TranslateServer: @unchecked Sendable {
                 preserveNewlines: true
             )
         } catch {
-            return errorResponse(.badRequest, message: error.localizedDescription)
+            return deepLErrorResponse(.badRequest, message: error.localizedDescription)
         }
 
         let detectedUpper = detection.languageCode.uppercased()
-        let response = DeepLResponse(translations: translated.map {
-            DeepLTranslation(detectedSourceLanguage: detectedUpper, text: $0)
+        let response = DeepLResponse(translations: zip(parsed.texts, translated).map { src, dst in
+            DeepLTranslation(
+                detectedSourceLanguage: detectedUpper,
+                text: dst,
+                billedCharacters: src.count
+            )
         })
 
-        return Response(
-            status: .ok,
-            headers: [.contentType: "application/json"],
-            body: .init(byteBuffer: .init(string: response.toJSON()))
-        )
+        return jsonResponse(response.toJSON())
     }
 
     private static func handleLibre(
@@ -251,11 +263,7 @@ public final class TranslateServer: @unchecked Sendable {
             payload = .single(translatedText: translated.first ?? "", detectedLanguage: detectedField)
         }
 
-        return Response(
-            status: .ok,
-            headers: [.contentType: "application/json"],
-            body: .init(byteBuffer: .init(string: payload.toJSON()))
-        )
+        return jsonResponse(payload.toJSON())
     }
 
     private static func handleLibreDetect(
@@ -289,11 +297,7 @@ public final class TranslateServer: @unchecked Sendable {
         let response = LibreDetectResponse(items: [
             .init(language: result.languageCode, confidence: Int((result.confidence * 100).rounded()))
         ])
-        return Response(
-            status: .ok,
-            headers: [.contentType: "application/json"],
-            body: .init(byteBuffer: .init(string: response.toJSON()))
-        )
+        return jsonResponse(response.toJSON())
     }
 
     private static func handleGoogle(
@@ -305,8 +309,10 @@ public final class TranslateServer: @unchecked Sendable {
         let parsed: GoogleRequest
         do {
             parsed = try await readGoogleBody(request: request)
+        } catch let error as TranslateError {
+            return googleErrorResponse(.badRequest, message: error.description, reason: "required")
         } catch {
-            return errorResponse(.badRequest, message: error.localizedDescription)
+            return googleErrorResponse(.badRequest, message: error.localizedDescription, reason: "required")
         }
 
         let target = Locale.Language(identifier: parsed.target)
@@ -322,7 +328,7 @@ public final class TranslateServer: @unchecked Sendable {
             do {
                 detection = try detector.detect(in: joined)
             } catch {
-                return errorResponse(.badRequest, message: "could not detect source language")
+                return googleErrorResponse(.badRequest, message: "could not detect source language")
             }
         }
 
@@ -331,9 +337,9 @@ public final class TranslateServer: @unchecked Sendable {
         do {
             try await translator.prepare(source: source, target: target, noInstall: false, quiet: true)
         } catch let error as TranslateError {
-            return errorResponse(.badRequest, message: error.description)
+            return googleErrorResponse(.badRequest, message: error.description)
         } catch {
-            return errorResponse(.badRequest, message: error.localizedDescription)
+            return googleErrorResponse(.badRequest, message: error.localizedDescription)
         }
 
         let translated: [String]
@@ -345,7 +351,7 @@ public final class TranslateServer: @unchecked Sendable {
                 preserveNewlines: true
             )
         } catch {
-            return errorResponse(.badRequest, message: error.localizedDescription)
+            return googleErrorResponse(.badRequest, message: error.localizedDescription)
         }
 
         let translations = translated.map { text in
@@ -353,11 +359,7 @@ public final class TranslateServer: @unchecked Sendable {
         }
         let payload = GoogleResponse(translations: translations)
 
-        return Response(
-            status: .ok,
-            headers: [.contentType: "application/json"],
-            body: .init(byteBuffer: .init(string: payload.toJSON()))
-        )
+        return jsonResponse(payload.toJSON())
     }
 
     // MARK: - Body readers
@@ -449,19 +451,51 @@ public final class TranslateServer: @unchecked Sendable {
             json = "{\"data\":{\"languages\":[\(body)]}}"
         }
 
-        return Response(
-            status: .ok,
-            headers: [.contentType: "application/json"],
-            body: .init(byteBuffer: .init(string: json))
+        return jsonResponse(json)
+    }
+
+    /// LibreTranslate error shape: `{"error":"message"}`.
+    private static func errorResponse(_ status: HTTPResponse.Status, message: String) -> Response {
+        let body = "{\"error\":\(StableJSON.string(message))}"
+        return jsonResponse(body, status: status)
+    }
+
+    /// DeepL error shape: `{"message":"..."}`.
+    private static func deepLErrorResponse(_ status: HTTPResponse.Status, message: String) -> Response {
+        let body = "{\"message\":\(StableJSON.string(message))}"
+        return jsonResponse(body, status: status)
+    }
+
+    /// Google v2 error envelope: `{"error":{"code":N,"message":"...","errors":[{"message":"...","domain":"global","reason":"..."}]}}`.
+    private static func googleErrorResponse(_ status: HTTPResponse.Status, message: String, reason: String = "invalid") -> Response {
+        let inner = "{\"message\":\(StableJSON.string(message)),\"domain\":\"global\",\"reason\":\(StableJSON.string(reason))}"
+        let body = "{\"error\":{\"code\":\(status.code),\"message\":\(StableJSON.string(message)),\"errors\":[\(inner)]}}"
+        return jsonResponse(body, status: status)
+    }
+
+    private static func jsonResponse(_ body: String, status: HTTPResponse.Status = .ok) -> Response {
+        Response(
+            status: status,
+            headers: [
+                .contentType: "application/json",
+                .accessControlAllowOrigin: "*",
+                .accessControlAllowHeaders: "Authorization, Content-Type, X-goog-api-key, DeepL-Auth-Key",
+                .accessControlAllowMethods: "GET, POST, OPTIONS",
+                .accessControlExposeHeaders: "Content-Type"
+            ],
+            body: .init(byteBuffer: .init(string: body))
         )
     }
 
-    private static func errorResponse(_ status: HTTPResponse.Status, message: String) -> Response {
-        let body = "{\"error\":\(StableJSON.string(message))}"
-        return Response(
-            status: status,
-            headers: [.contentType: "application/json"],
-            body: .init(byteBuffer: .init(string: body))
+    private static func corsPreflight() -> Response {
+        Response(
+            status: .noContent,
+            headers: [
+                .accessControlAllowOrigin: "*",
+                .accessControlAllowHeaders: "Authorization, Content-Type, X-goog-api-key, DeepL-Auth-Key",
+                .accessControlAllowMethods: "GET, POST, OPTIONS",
+                .accessControlMaxAge: "86400"
+            ]
         )
     }
 }

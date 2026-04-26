@@ -7,7 +7,7 @@
 ### GET /languages -- LibreTranslate language list
 
 ```sh
-curl -sf http://127.0.0.1:51052/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:2], indent=2))'
+curl -sf http://127.0.0.1:52537/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:2], indent=2))'
 ```
 
 ```
@@ -97,7 +97,7 @@ exit code: `0`
 ### POST /detect -- language detection
 
 ```sh
-curl -sf -X POST http://127.0.0.1:51052/detect -H 'Content-Type: application/json' --data '{"q":"Das ist ein deutscher Satz mit genug Worten."}'
+curl -sf -X POST http://127.0.0.1:52537/detect -H 'Content-Type: application/json' --data '{"q":"Das ist ein deutscher Satz mit genug Worten."}'
 ```
 
 ```
@@ -109,15 +109,39 @@ exit code: `0`
 
 ### POST /translate -- single string q
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/translate -H 'Content-Type: application/json' --data '{"q":"Hallo Welt.","source":"de","target":"en","format":"text"}'
+```
+
+```
+{"translatedText":"Hello world."}
+```
+
+exit code: `0`
 
 
 ### POST /translate -- array q (batch)
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/translate -H 'Content-Type: application/json' --data '{"q":["Hallo","Welt"],"source":"de","target":"en"}'
+```
+
+```
+{"translatedText":["Hello","World"]}
+```
+
+exit code: `0`
 
 
 ### POST /translate -- source=auto adds detectedLanguage to response
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/translate -H 'Content-Type: application/json' --data '{"q":"Das ist ein deutscher Satz mit genug Worten.","source":"auto","target":"en"}'
+```
+
+```
+{"detectedLanguage":{"confidence":100,"language":"de"},"translatedText":"This is a German sentence with enough words."}
+```
+
+exit code: `0`
 

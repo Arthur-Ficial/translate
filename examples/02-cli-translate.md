@@ -6,40 +6,131 @@ Stdin, arguments, files, plain / JSON / NDJSON formats, batch mode, protected sp
 
 ### Translate piped German to English (plain)
 
-_skipped — de-en model not installed_
+```sh
+printf '%s' 'Hallo Welt.
+' | /Users/arthurficial/dev/translate/.build/release/translate --to en --from de --no-install --quiet
+```
+
+```
+Hello world.
+```
+
+exit code: `0`
 
 
 ### Translate two text arguments
 
-_skipped — en-de model not installed_
+```sh
+/Users/arthurficial/dev/translate/.build/release/translate --to de --from en --no-install --quiet 'good night' 'see you tomorrow'
+```
+
+```
+Gute Nacht
+Bis morgen
+```
+
+exit code: `0`
 
 
 ### Translate piped paragraphs as NDJSON
 
-_skipped — de-en model not installed_
+```sh
+cat <<'EOF' | /Users/arthurficial/dev/translate/.build/release/translate --to en --from de --no-install --format ndjson --quiet
+Hallo Welt.
+
+Wie geht es dir?
+EOF
+```
+
+```
+{"from":"de","to":"en","src":"Hallo Welt.","dst":"Hello world.","conf":1}
+{"from":"de","to":"en","src":"Wie geht es dir?\n","dst":"How are you?\n","conf":1}
+```
+
+exit code: `0`
 
 
 ### Translate piped paragraphs as JSON array
 
-_skipped — de-en model not installed_
+```sh
+cat <<'EOF' | /Users/arthurficial/dev/translate/.build/release/translate --to en --from de --no-install --format json --quiet
+Hallo Welt.
+
+Guten Abend.
+EOF
+```
+
+```
+[{"from":"de","to":"en","src":"Hallo Welt.","dst":"Hello world.","conf":1},{"from":"de","to":"en","src":"Guten Abend.\n","dst":"Good evening.\n","conf":1}]
+```
+
+exit code: `0`
 
 
 ### Batch mode: each line is its own translation unit
 
-_skipped — de-en model not installed_
+```sh
+cat <<'EOF' | /Users/arthurficial/dev/translate/.build/release/translate --to en --from de --no-install --batch --quiet
+Eins
+Zwei
+Drei
+EOF
+```
+
+```
+One
+Two
+Three
+```
+
+exit code: `0`
 
 
 ### Protected URLs and emails pass through unchanged
 
-_skipped — de-en model not installed_
+```sh
+printf '%s' 'Hallo, schreibe an a@b.com oder besuche https://example.com.
+' | /Users/arthurficial/dev/translate/.build/release/translate --to en --from de --no-install --quiet
+```
+
+```
+Hello, write toa@b.comOr visithttps://example.com.
+```
+
+exit code: `0`
 
 
 ### Translate from a file with --file (single)
 
-_skipped — de-en model not installed_
+```sh
+tmp=$(mktemp); printf 'Hallo Welt.\n' > "$tmp";
+/Users/arthurficial/dev/translate/.build/release/translate --from de --to en --no-install --quiet --file "$tmp";
+rm -f "$tmp"
+
+```
+
+```
+Hello world.
+```
+
+exit code: `0`
 
 
 ### Translate from multiple --file inputs
 
-_skipped — de-en model not installed_
+```sh
+d=$(mktemp -d);
+printf 'Hallo Welt.\n' > "$d/a.txt";
+printf 'Wie geht es dir?\n' > "$d/b.txt";
+/Users/arthurficial/dev/translate/.build/release/translate --from de --to en --no-install --quiet --format ndjson --file "$d/a.txt" --file "$d/b.txt";
+rm -rf "$d"
+
+```
+
+```
+{"from":"de","to":"en","src":"Hallo Welt.\n","dst":"Hello world.\n","conf":1}
+{"from":"de","to":"en","src":"Wie geht es dir?\n","dst":"How are you?\n","conf":1}
+```
+
+exit code: `0`
 

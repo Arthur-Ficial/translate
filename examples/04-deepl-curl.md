@@ -7,7 +7,7 @@
 ### GET /v2/languages -- DeepL language list
 
 ```sh
-curl -sf http://127.0.0.1:51052/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:3], indent=2))'
+curl -sf http://127.0.0.1:52537/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:3], indent=2))'
 ```
 
 ```
@@ -33,7 +33,7 @@ exit code: `0`
 ### GET /v2/usage -- DeepL quota stub
 
 ```sh
-curl -sf http://127.0.0.1:51052/v2/usage
+curl -sf http://127.0.0.1:52537/v2/usage
 ```
 
 ```
@@ -45,23 +45,50 @@ exit code: `0`
 
 ### POST /v2/translate -- single text (form-encoded)
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/v2/translate --data-urlencode 'text=Hallo Welt.' --data-urlencode 'target_lang=EN' --data-urlencode 'source_lang=DE'
+```
+
+```
+{"translations":[{"detected_source_language":"DE","text":"Hello world.","billed_characters":11}]}
+```
+
+exit code: `0`
 
 
 ### POST /v2/translate -- multiple texts in one request
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/v2/translate --data-urlencode 'text=Hallo' --data-urlencode 'text=Welt' --data-urlencode 'text=Guten Morgen' --data-urlencode 'target_lang=EN' --data-urlencode 'source_lang=DE'
+```
+
+```
+{"translations":[{"detected_source_language":"DE","text":"Hello","billed_characters":5},{"detected_source_language":"DE","text":"World","billed_characters":4},{"detected_source_language":"DE","text":"Good morning","billed_characters":12}]}
+```
+
+exit code: `0`
 
 
 ### POST /v2/translate -- JSON body with array text
 
-_skipped — de-en model not installed_
+```sh
+curl -sf -X POST http://127.0.0.1:52537/v2/translate \
+  -H "Content-Type: application/json" \
+  --data '{"text":["Hallo","Welt"],"target_lang":"EN","source_lang":"DE"}'
+
+```
+
+```
+{"translations":[{"detected_source_language":"DE","text":"Hello","billed_characters":5},{"detected_source_language":"DE","text":"World","billed_characters":4}]}
+```
+
+exit code: `0`
 
 
 ### POST /v2/translate -- missing target_lang -> 400
 
 ```sh
-curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:51052/v2/translate --data-urlencode 'text=Hallo'
+curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:52537/v2/translate --data-urlencode 'text=Hallo'
 ```
 
 ```

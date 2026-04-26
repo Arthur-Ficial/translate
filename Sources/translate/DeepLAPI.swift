@@ -81,10 +81,12 @@ public struct DeepLRequest: Sendable {
 public struct DeepLTranslation: Sendable {
     public let detectedSourceLanguage: String
     public let text: String
+    public let billedCharacters: Int
 
-    public init(detectedSourceLanguage: String, text: String) {
+    public init(detectedSourceLanguage: String, text: String, billedCharacters: Int) {
         self.detectedSourceLanguage = detectedSourceLanguage
         self.text = text
+        self.billedCharacters = billedCharacters
     }
 }
 
@@ -97,7 +99,7 @@ public struct DeepLResponse: Sendable {
 
     public func toJSON() -> String {
         let body = translations.map { item in
-            "{\"detected_source_language\":\(StableJSON.string(item.detectedSourceLanguage)),\"text\":\(StableJSON.string(item.text))}"
+            "{\"detected_source_language\":\(StableJSON.string(item.detectedSourceLanguage)),\"text\":\(StableJSON.string(item.text)),\"billed_characters\":\(item.billedCharacters)}"
         }.joined(separator: ",")
         return "{\"translations\":[\(body)]}"
     }

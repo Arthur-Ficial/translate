@@ -8,7 +8,7 @@ Drives `translate --serve` with the community `libretranslatepy` client.
 
 ```python
 from libretranslatepy import LibreTranslateAPI
-api = LibreTranslateAPI("http://127.0.0.1:51052")
+api = LibreTranslateAPI("http://127.0.0.1:52537")
 ls = api.languages()
 print(f"got {len(ls)} languages; first two: {[l['code'] for l in ls[:2]]}")
 ```
@@ -24,7 +24,7 @@ exit code: `0`
 
 ```python
 from libretranslatepy import LibreTranslateAPI
-api = LibreTranslateAPI("http://127.0.0.1:51052")
+api = LibreTranslateAPI("http://127.0.0.1:52537")
 d = api.detect("Das ist ein deutscher Satz mit genug Worten.")
 print(d)
 ```
@@ -38,5 +38,15 @@ exit code: `0`
 
 ### libretranslatepy LibreTranslateAPI.translate()
 
-_skipped — de-en model not installed_
+```python
+from libretranslatepy import LibreTranslateAPI
+api = LibreTranslateAPI("http://127.0.0.1:52537")
+print(api.translate("Hallo Welt.", "de", "en"))
+```
+
+```
+Hello world.
+```
+
+exit code: `0`
 

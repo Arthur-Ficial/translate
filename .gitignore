@@ -8,3 +8,4 @@ DerivedData/
 .worktrees/
 translate-*.tar.gz
 /tmp_examples/
+translate-0.1.0-arm64-macos.tar.gz

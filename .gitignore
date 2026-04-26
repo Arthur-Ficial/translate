@@ -1,0 +1,10 @@
+.build/
+.swiftpm/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+.DS_Store
+.notes/
+.worktrees/
+translate-*.tar.gz
+/tmp_examples/

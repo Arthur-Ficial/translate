@@ -1,0 +1,204 @@
+.TH TRANSLATE 1 "April 2026" "translate 0.1.0" "User Commands"
+.SH NAME
+translate \- fast on-device translation using Apple's Translation framework
+.SH SYNOPSIS
+.B translate
+.RI [ options ]
+.RI [ text ...]
+.br
+.B translate --serve
+.RI [ --port " port" ]
+.RI [ --host " host" ]
+.SH DESCRIPTION
+.B translate
+is a UNIX-style macOS command-line filter for on-device translation. It
+reads text from positional arguments, files, or standard input; writes
+translated text to standard output; and writes errors and optional progress
+to standard error.
+.PP
+The source language is detected once with NaturalLanguage when
+.B --from
+is omitted. Translation uses Apple's on-device Translation framework. No
+cloud translation service, API key, telemetry, or third-party translation
+library is used by this program.
+.PP
+With
+.BR --serve ,
+.B translate
+exposes an HTTP server compatible with three real-world translation APIs:
+DeepL v2, LibreTranslate, and Google Cloud Translation v2. Existing client
+libraries (Python
+.BR deepl ,
+Node
+.BR deepl-node ,
+.BR libretranslatepy ,
+.BR google-cloud-translate )
+can target this server by overriding their endpoint URL.
+.SH OPTIONS
+.TP
+.BI --to " lang"
+Target language as a BCP-47 identifier (e.g.
+.BR en ,
+.BR de ,
+.BR ja ,
+.BR de-AT ).
+.TP
+.BI --from " lang"
+Source language. If omitted, detected from the input prefix.
+.TP
+.B --detect-only
+Print detected language code and confidence, then exit without translating.
+.TP
+.BI --format " mode"
+Output format:
+.BR plain ,
+.BR json ,
+or
+.BR ndjson .
+The default is
+.BR plain .
+.TP
+.B --preserve-newlines
+Preserve newline structure (default).
+.TP
+.B --no-preserve-newlines
+Allow paragraph-level newline reflow.
+.TP
+.B --batch
+Treat each input line as an independent translation unit.
+.TP
+.BI --file " path"
+Translate a UTF-8 file. Repeatable.
+.TP
+.BI --install " pair"
+Prepare/download a model pair such as
+.BR de-en .
+.TP
+.B --installed
+List installed language pairs and exit.
+.TP
+.B --available
+List supported language pairs and exit.
+.TP
+.B --no-install
+Fail with exit 4 if a required model is missing.
+.TP
+.BI --langs " a,b,c"
+Comma-separated detection hints for short or ambiguous input.
+.TP
+.B --quiet
+Suppress progress messages on standard error.
+.TP
+.B --serve
+Run as an HTTP server.
+.TP
+.BI --port " port"
+TCP port for
+.BR --serve .
+Default
+.BR 8989 .
+.TP
+.BI --host " host"
+Bind address for
+.BR --serve .
+Default
+.BR 127.0.0.1 .
+.TP
+.BI --api-key " key"
+Optional API key required by clients.
+.TP
+.B --version
+Print version information.
+.TP
+.B --help
+Show help.
+.SH EXAMPLES
+.TP
+Pipe German to English:
+.EX
+echo "hallo welt" | translate --to en
+.EE
+.TP
+Multiple text arguments:
+.EX
+translate --to de "hello world" "good night"
+.EE
+.TP
+Translate clipboard contents:
+.EX
+pbpaste | translate --to en | pbcopy
+.EE
+.TP
+Translate a file as NDJSON:
+.EX
+translate --to ja --format ndjson < sentences.txt | jq -r .dst
+.EE
+.TP
+Install a model pair:
+.EX
+translate --install de-en
+.EE
+.TP
+Run an HTTP server:
+.EX
+translate --serve --port 8989
+curl -s -X POST http://localhost:8989/v2/translate \\
+    --data-urlencode "text=Hallo" --data-urlencode "target_lang=EN"
+.EE
+.SH HTTP ENDPOINTS
+.TP
+.B /v2/translate
+DeepL-compatible. Form-encoded or JSON.
+.TP
+.B /v2/languages
+DeepL-compatible language list.
+.TP
+.B /v2/usage
+DeepL-compatible quota stub (always returns sentinel values).
+.TP
+.B /translate
+LibreTranslate-compatible. JSON or form. Single string or array
+.IR q .
+.TP
+.B /detect
+LibreTranslate-compatible language detection.
+.TP
+.B /languages
+LibreTranslate-compatible language list with
+.B targets
+field.
+.TP
+.B /language/translate/v2
+Google Cloud Translation v2-compatible. Form or JSON.
+.TP
+.B /language/translate/v2/languages
+Google v2-compatible language list.
+.TP
+.B /health \fRand\fB /healthz
+Service liveness checks.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Input or usage error.
+.TP
+.B 2
+Translation failure.
+.TP
+.B 3
+Unsupported OS.
+.TP
+.B 4
+Model not installed and
+.B --no-install
+was set.
+.TP
+.B 5
+Unsupported language pair.
+.SH SEE ALSO
+.BR pbpaste (1),
+.BR pbcopy (1),
+.BR jq (1),
+.BR curl (1)

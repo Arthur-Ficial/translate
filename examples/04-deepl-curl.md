@@ -7,7 +7,7 @@
 ### GET /v2/languages -- DeepL language list
 
 ```sh
-curl -sf http://127.0.0.1:50855/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:3], indent=2))'
+curl -sf http://127.0.0.1:51052/v2/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:3], indent=2))'
 ```
 
 ```
@@ -33,7 +33,7 @@ exit code: `0`
 ### GET /v2/usage -- DeepL quota stub
 
 ```sh
-curl -sf http://127.0.0.1:50855/v2/usage
+curl -sf http://127.0.0.1:51052/v2/usage
 ```
 
 ```
@@ -61,7 +61,7 @@ _skipped — de-en model not installed_
 ### POST /v2/translate -- missing target_lang -> 400
 
 ```sh
-curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:50855/v2/translate --data-urlencode 'text=Hallo'
+curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:51052/v2/translate --data-urlencode 'text=Hallo'
 ```
 
 ```

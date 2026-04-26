@@ -7,7 +7,7 @@
 ### GET /languages -- LibreTranslate language list
 
 ```sh
-curl -sf http://127.0.0.1:50855/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:2], indent=2))'
+curl -sf http://127.0.0.1:51052/languages | python3 -c 'import sys, json; d = json.load(sys.stdin); print(json.dumps(d[:2], indent=2))'
 ```
 
 ```
@@ -97,7 +97,7 @@ exit code: `0`
 ### POST /detect -- language detection
 
 ```sh
-curl -sf -X POST http://127.0.0.1:50855/detect -H 'Content-Type: application/json' --data '{"q":"Das ist ein deutscher Satz mit genug Worten."}'
+curl -sf -X POST http://127.0.0.1:51052/detect -H 'Content-Type: application/json' --data '{"q":"Das ist ein deutscher Satz mit genug Worten."}'
 ```
 
 ```

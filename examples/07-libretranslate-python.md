@@ -8,7 +8,7 @@ Drives `translate --serve` with the community `libretranslatepy` client.
 
 ```python
 from libretranslatepy import LibreTranslateAPI
-api = LibreTranslateAPI("http://127.0.0.1:50855")
+api = LibreTranslateAPI("http://127.0.0.1:51052")
 ls = api.languages()
 print(f"got {len(ls)} languages; first two: {[l['code'] for l in ls[:2]]}")
 ```
@@ -24,7 +24,7 @@ exit code: `0`
 
 ```python
 from libretranslatepy import LibreTranslateAPI
-api = LibreTranslateAPI("http://127.0.0.1:50855")
+api = LibreTranslateAPI("http://127.0.0.1:51052")
 d = api.detect("Das ist ein deutscher Satz mit genug Worten.")
 print(d)
 ```

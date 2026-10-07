@@ -10,7 +10,7 @@
 
 `translate` is a tiny macOS CLI built as a UNIX filter: stdin in, stdout out, stderr for errors and optional progress. It uses Apple's on-device Translation framework on macOS Tahoe, auto-detects the source language with NaturalLanguage, reuses a single translation session per run, and batches work wherever possible. With `--serve` it exposes the same engine over HTTP, byte-compatible with DeepL `/v2/*`, LibreTranslate `/translate /detect /languages`, and Google `/language/translate/v2/*` — so existing client libraries point at it unchanged.
 
-No cloud calls, no API keys, no telemetry, no LLMs, no third-party translation libraries. Apple's Translation framework is a deterministic neural translation engine — same input, same output, every time. (The one exception is the opt-in `--quality high` mode, see [Quality](#quality).)
+No cloud calls, no API keys, no telemetry, no LLMs, no third-party translation libraries. Apple's Translation framework is a deterministic neural translation engine — same input, same output, every time. (The one exception to "no LLMs" and "same output" is the opt-in `--quality high` mode, which uses on-device Apple Intelligence; see [Quality](#quality).)
 
 ## What it is
 

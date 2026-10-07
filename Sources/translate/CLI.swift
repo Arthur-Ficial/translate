@@ -35,9 +35,6 @@ public struct TranslateCommand: AsyncParsableCommand, Sendable {
     @Option(name: .customLong("file"), help: "Translate a UTF-8 file. Repeatable.")
     public var files: [String] = []
 
-    @Option(name: .long, help: "Translation quality: low (default, deterministic lowLatency) or high (Apple Intelligence highFidelity, macOS 26.4+; slower, output may vary between runs).")
-    public var quality: Quality = .low
-
     @Option(name: .long, help: "Install/download a model pair such as de-en, de-AT-en, or pt-BR-en-US.")
     public var install: String?
 
@@ -49,6 +46,9 @@ public struct TranslateCommand: AsyncParsableCommand, Sendable {
 
     @Flag(name: .customLong("no-install"), help: "Fail if the model is missing instead of preparing/downloading it.")
     public var noInstall: Bool = false
+
+    @Option(name: .long, help: "Translation quality: low (default, deterministic lowLatency) or high (Apple Intelligence highFidelity, macOS 26.4+; slower, output may vary between runs).")
+    public var quality: Quality = .low
 
     @Option(name: .long, help: "Comma-separated language hints for short input detection, for example de,en,fr.")
     public var langs: String?

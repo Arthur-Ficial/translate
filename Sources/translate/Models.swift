@@ -1,4 +1,6 @@
+@preconcurrency import ArgumentParser
 @preconcurrency import Foundation
+@preconcurrency import FoundationModels
 @preconcurrency import Translation
 
 @available(macOS 26.0, *)
@@ -23,16 +25,30 @@ public struct LanguagePair: Sendable, Equatable {
     }
 }
 
+/// Translation strategy selector. `low` is the deterministic lowLatency path
+/// and the default; `high` opts into Apple Intelligence highFidelity
+/// (macOS 26.4+), which is slower and not guaranteed byte-stable.
+public enum Quality: String, ExpressibleByArgument, CaseIterable, Sendable {
+    case low
+    case high
+
+    public init?(argument: String) {
+        self.init(rawValue: argument)
+    }
+}
+
 @available(macOS 26.0, *)
 public struct ModelManager: Sendable {
     public let quiet: Bool
+    public let quality: Quality
 
-    public init(quiet: Bool = false) {
+    public init(quiet: Bool = false, quality: Quality = .low) {
         self.quiet = quiet
+        self.quality = quality
     }
 
     public func status(source: Locale.Language, target: Locale.Language) async -> PairStatus {
-        let availability = TranslationSupport.availability()
+        let availability = TranslationSupport.availability(quality: quality)
         let status = await availability.status(from: source, to: target)
 
         switch status {
@@ -48,7 +64,7 @@ public struct ModelManager: Sendable {
     }
 
     public func prepare(source: Locale.Language, target: Locale.Language) async throws {
-        let session = TranslationSupport.installedSession(source: source, target: target)
+        let session = TranslationSupport.installedSession(source: source, target: target, quality: quality)
         try await session.prepareTranslation()
 
         let after = await status(source: source, target: target)
@@ -94,7 +110,7 @@ public struct ModelManager: Sendable {
     }
 
     private func allPairs(includeSupported: Bool) async -> [String] {
-        let availability = TranslationSupport.availability()
+        let availability = TranslationSupport.availability(quality: quality)
         let languages = await availability.supportedLanguages
 
         var output: [String] = []
@@ -161,9 +177,19 @@ public struct ModelManager: Sendable {
 
 @available(macOS 26.0, *)
 public enum TranslationSupport: Sendable {
-    public static func availability() -> LanguageAvailability {
+    @available(macOS 26.4, *)
+    public static func strategy(for quality: Quality) -> TranslationSession.Strategy {
+        switch quality {
+        case .low:
+            return .lowLatency
+        case .high:
+            return .highFidelity
+        }
+    }
+
+    public static func availability(quality: Quality = .low) -> LanguageAvailability {
         if #available(macOS 26.4, *) {
-            return LanguageAvailability(preferredStrategy: .lowLatency)
+            return LanguageAvailability(preferredStrategy: strategy(for: quality))
         } else {
             return LanguageAvailability()
         }
@@ -171,13 +197,14 @@ public enum TranslationSupport: Sendable {
 
     public static func configuration(
         source: Locale.Language,
-        target: Locale.Language
+        target: Locale.Language,
+        quality: Quality = .low
     ) -> TranslationSession.Configuration {
         if #available(macOS 26.4, *) {
             return TranslationSession.Configuration(
                 source: source,
                 target: target,
-                preferredStrategy: .lowLatency
+                preferredStrategy: strategy(for: quality)
             )
         } else {
             return TranslationSession.Configuration(source: source, target: target)
@@ -186,16 +213,40 @@ public enum TranslationSupport: Sendable {
 
     public static func installedSession(
         source: Locale.Language,
-        target: Locale.Language
+        target: Locale.Language,
+        quality: Quality = .low
     ) -> TranslationSession {
         if #available(macOS 26.4, *) {
             return TranslationSession(
                 installedSource: source,
                 target: target,
-                preferredStrategy: .lowLatency
+                preferredStrategy: strategy(for: quality)
             )
         } else {
             return TranslationSession(installedSource: source, target: target)
+        }
+    }
+
+    /// Reasons `--quality high` will silently run the lowLatency models
+    /// instead. Apple's API gives no signal for this, so we check the
+    /// preconditions ourselves and warn on stderr. Empty means no known
+    /// reason to fall back.
+    public static func highFidelityFallbackReason() -> String? {
+        guard #available(macOS 26.4, *) else {
+            return "highFidelity needs macOS 26.4 or newer"
+        }
+
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            return nil
+        case .unavailable(.appleIntelligenceNotEnabled):
+            return "Apple Intelligence is not enabled"
+        case .unavailable(.deviceNotEligible):
+            return "this Mac is not eligible for Apple Intelligence"
+        case .unavailable(.modelNotReady):
+            return "Apple Intelligence models are not ready yet"
+        case .unavailable:
+            return "Apple Intelligence is unavailable"
         }
     }
 }

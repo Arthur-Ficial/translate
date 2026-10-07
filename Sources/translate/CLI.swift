@@ -35,6 +35,9 @@ public struct TranslateCommand: AsyncParsableCommand, Sendable {
     @Option(name: .customLong("file"), help: "Translate a UTF-8 file. Repeatable.")
     public var files: [String] = []
 
+    @Option(name: .long, help: "Translation quality: low (default, deterministic lowLatency) or high (Apple Intelligence highFidelity, macOS 26.4+; slower, output may vary between runs).")
+    public var quality: Quality = .low
+
     @Option(name: .long, help: "Install/download a model pair such as de-en, de-AT-en, or pt-BR-en-US.")
     public var install: String?
 
@@ -75,11 +78,15 @@ public struct TranslateCommand: AsyncParsableCommand, Sendable {
             throw TranslateError.unsupportedOS
         }
 
-        let manager = ModelManager(quiet: quiet)
+        if quality == .high, let reason = TranslationSupport.highFidelityFallbackReason() {
+            Stdio.stderr("translate: warning: --quality high falls back to lowLatency models: \(reason)\n")
+        }
+
+        let manager = ModelManager(quiet: quiet, quality: quality)
 
         if serve {
             let server = TranslateServer(
-                translator: AppleTranslator(),
+                translator: AppleTranslator(quality: quality),
                 detector: LanguageDetector(hints: LanguageList.parse(langs)),
                 host: host,
                 port: port,
@@ -121,7 +128,7 @@ public struct TranslateCommand: AsyncParsableCommand, Sendable {
             text: text
         )
 
-        let runner = TranslateRunner(translator: AppleTranslator())
+        let runner = TranslateRunner(translator: AppleTranslator(quality: quality))
         try await runner.run(options)
     }
 }

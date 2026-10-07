@@ -10,7 +10,7 @@
 
 `translate` is a tiny macOS CLI built as a UNIX filter: stdin in, stdout out, stderr for errors and optional progress. It uses Apple's on-device Translation framework on macOS Tahoe, auto-detects the source language with NaturalLanguage, reuses a single translation session per run, and batches work wherever possible. With `--serve` it exposes the same engine over HTTP, byte-compatible with DeepL `/v2/*`, LibreTranslate `/translate /detect /languages`, and Google `/language/translate/v2/*` — so existing client libraries point at it unchanged.
 
-No cloud calls, no API keys, no telemetry, no LLMs, no third-party translation libraries. Apple's Translation framework is a deterministic neural translation engine — same input, same output, every time.
+No cloud calls, no API keys, no telemetry, no LLMs, no third-party translation libraries. Apple's Translation framework is a deterministic neural translation engine — same input, same output, every time. (The one exception is the opt-in `--quality high` mode, see [Quality](#quality).)
 
 ## What it is
 
@@ -109,6 +109,7 @@ curl -s -X POST "http://localhost:8989/language/translate/v2" \
 | `--installed` | List installed language pairs |
 | `--available` | List supported language pairs |
 | `--no-install` | Fail with exit 4 if a required model is missing |
+| `--quality <low\|high>` | `low` (default): deterministic lowLatency models. `high`: Apple Intelligence highFidelity, macOS 26.4+ |
 | `--langs <a,b,c>` | Detection hints for short ambiguous input |
 | `--quiet` | Suppress progress on stderr |
 | `--serve` | Run as HTTP server |
@@ -119,6 +120,20 @@ curl -s -X POST "http://localhost:8989/language/translate/v2" \
 ## Why on-device?
 
 On-device translation keeps source text local, reduces latency, works offline after models are installed, and needs no API key, account, usage quota, proxy, or billing setup. It is also easier to script safely: the same input, model version, and flags produce byte-stable output without a remote service changing behavior between runs.
+
+## Quality
+
+```sh
+translate --to en --quality high < final-draft.txt
+```
+
+`--quality high` uses Apple's `highFidelity` strategy (macOS 26.4+), which runs through Apple Intelligence for more fluent output. It stays 100% on-device, but:
+
+- it is roughly an order of magnitude slower than the default, and the benchmark numbers in this README are `--quality low` numbers;
+- it is generative, so the same input is **not guaranteed to produce byte-identical output** across runs — use the default `low` when you need determinism;
+- it needs Apple Intelligence enabled. Without it, Apple silently falls back to the lowLatency models; `translate` detects this and prints a warning on stderr (even with `--quiet`).
+
+`--quality` also applies to `--install`, `--installed`, `--available`, and `--serve`.
 
 ## Model management
 

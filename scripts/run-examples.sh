@@ -41,7 +41,7 @@ has_pair() {
 
 echo "==> --version"
 ver=$("$BIN" --version)
-[[ "$ver" == *"0.1.0"* ]] && ok "version contains 0.1.0" || fail "version" "got: $ver"
+[[ "$ver" == *"0.2.0"* ]] && ok "version contains 0.2.0" || fail "version" "got: $ver"
 
 echo "==> --help"
 "$BIN" --help >/dev/null && ok "help exits 0" || fail "help"

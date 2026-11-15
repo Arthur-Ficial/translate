@@ -64,7 +64,7 @@ final class E2EBinaryTests: XCTestCase {
     func testVersionPrints() throws {
         let result = try run(args: ["--version"])
         XCTAssertEqual(result.code, 0, result.stderr)
-        XCTAssertTrue(result.stdout.contains("0.1.1"))
+        XCTAssertTrue(result.stdout.contains("0.2.0"))
     }
 
     func testHelpExits0() throws {

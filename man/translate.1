@@ -83,6 +83,16 @@ List supported language pairs and exit.
 .B --no-install
 Fail with exit 4 if a required model is missing.
 .TP
+.BI --quality " low|high"
+Translation strategy.
+.B low
+(default) uses the deterministic lowLatency models.
+.B high
+uses Apple Intelligence highFidelity (macOS 26.4 or newer): more fluent,
+roughly an order of magnitude slower, and output is not guaranteed to be
+byte-identical across runs. If Apple Intelligence is unavailable, a warning
+is printed on standard error and the lowLatency models are used.
+.TP
 .BI --langs " a,b,c"
 Comma-separated detection hints for short or ambiguous input.
 .TP

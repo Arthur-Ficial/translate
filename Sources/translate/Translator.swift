@@ -23,8 +23,11 @@ public actor AppleTranslator: Translating {
     private var session: TranslationSession?
     private var preparedSource: Locale.Language?
     private var preparedTarget: Locale.Language?
+    public let quality: Quality
 
-    public init() {}
+    public init(quality: Quality = .low) {
+        self.quality = quality
+    }
 
     public func prepare(
         source: Locale.Language,
@@ -36,7 +39,7 @@ public actor AppleTranslator: Translating {
             return
         }
 
-        let manager = ModelManager(quiet: quiet)
+        let manager = ModelManager(quiet: quiet, quality: quality)
         let status = await manager.status(source: source, target: target)
 
         switch status {
@@ -58,7 +61,7 @@ public actor AppleTranslator: Translating {
             throw TranslateError.unsupportedPair("\(source.minimalIdentifier)-\(target.minimalIdentifier)")
         }
 
-        session = TranslationSupport.installedSession(source: source, target: target)
+        session = TranslationSupport.installedSession(source: source, target: target, quality: quality)
         preparedSource = source
         preparedTarget = target
     }

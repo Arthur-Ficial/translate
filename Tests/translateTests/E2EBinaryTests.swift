@@ -135,4 +135,45 @@ final class E2EBinaryTests: XCTestCase {
         XCTAssertTrue(result.stdout.contains("\"from\":\"de\""))
         XCTAssertTrue(result.stdout.contains("\"to\":\"en\""))
     }
+
+    func testQualityHelpIsDocumented() throws {
+        let result = try run(args: ["--help"])
+        XCTAssertEqual(result.code, 0)
+        XCTAssertTrue(result.stdout.contains("--quality"))
+    }
+
+    func testQualityRejectsUnknownValue() throws {
+        let result = try run(args: ["--to", "en", "--quality", "best"], stdin: "Hallo\n")
+        XCTAssertNotEqual(result.code, 0)
+        XCTAssertTrue(result.stderr.contains("quality"), result.stderr)
+        XCTAssertTrue(result.stdout.isEmpty)
+    }
+
+    func testQualityHighWarnsOrStaysSilentConsistently() throws {
+        // stderr carries a fallback warning iff highFidelity is not usable here.
+        let result = try run(args: ["--detect-only", "--quality", "high", "Das ist ein deutscher Satz mit genug Worten."])
+        XCTAssertEqual(result.code, 0, result.stderr)
+        XCTAssertTrue(result.stdout.hasPrefix("de"))
+        let warned = result.stderr.contains("falls back to lowLatency")
+        XCTAssertEqual(warned, TranslationSupport.highFidelityFallbackReason() != nil, result.stderr)
+    }
+
+    func testQualityLowNeverWarns() throws {
+        let result = try run(args: ["--detect-only", "--quality", "low", "Das ist ein deutscher Satz mit genug Worten."])
+        XCTAssertEqual(result.code, 0, result.stderr)
+        XCTAssertFalse(result.stderr.contains("warning"), result.stderr)
+    }
+
+    func testQualityHighTranslatesIfModelsInstalled() throws {
+        guard TranslationSupport.highFidelityFallbackReason() == nil else {
+            throw XCTSkip("highFidelity unavailable on this Mac")
+        }
+        // Not `--installed --quality high`: enumerating every AI pair takes minutes.
+        let result = try run(args: ["--to", "en", "--from", "de", "--quality", "high", "--no-install"], stdin: "Das ist ein Test.\n")
+        if result.code == 4 {
+            throw XCTSkip("de-en highFidelity model not installed")
+        }
+        XCTAssertEqual(result.code, 0, "stderr=\(result.stderr) stdout=\(result.stdout)")
+        XCTAssertTrue(result.stdout.lowercased().contains("test"), result.stdout)
+    }
 }

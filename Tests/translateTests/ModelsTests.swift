@@ -24,6 +24,75 @@ final class ModelsTests: XCTestCase {
         XCTAssertTrue(pair.spec.hasSuffix("-en") || pair.spec.hasSuffix("-en-US"))
     }
 
+    func testQualityParsesLowAndHighOnly() {
+        XCTAssertEqual(Quality(argument: "low"), .low)
+        XCTAssertEqual(Quality(argument: "high"), .high)
+        XCTAssertNil(Quality(argument: "HIGH"))
+        XCTAssertNil(Quality(argument: "medium"))
+    }
+
+    func testQualityFlagDefaultsToLow() throws {
+        let command = try TranslateCommand.parse(["--to", "en"])
+        XCTAssertEqual(command.quality, .low)
+    }
+
+    func testQualityFlagAcceptsHigh() throws {
+        let command = try TranslateCommand.parse(["--to", "en", "--quality", "high"])
+        XCTAssertEqual(command.quality, .high)
+    }
+
+    func testQualityFlagRejectsUnknownValue() {
+        XCTAssertThrowsError(try TranslateCommand.parse(["--to", "en", "--quality", "best"]))
+    }
+
+    func testQualityMapsToStrategy() throws {
+        guard #available(macOS 26.4, *) else {
+            throw XCTSkip("TranslationSession.Strategy needs macOS 26.4")
+        }
+        XCTAssertEqual(TranslationSupport.strategy(for: .low), .lowLatency)
+        XCTAssertEqual(TranslationSupport.strategy(for: .high), .highFidelity)
+    }
+
+    func testConfigurationCarriesQualityStrategy() throws {
+        guard #available(macOS 26.4, *) else {
+            throw XCTSkip("TranslationSession.Strategy needs macOS 26.4")
+        }
+        let de = Locale.Language(identifier: "de")
+        let en = Locale.Language(identifier: "en")
+        XCTAssertEqual(TranslationSupport.configuration(source: de, target: en).preferredStrategy, .lowLatency)
+        XCTAssertEqual(TranslationSupport.configuration(source: de, target: en, quality: .high).preferredStrategy, .highFidelity)
+        XCTAssertEqual(TranslationSupport.availability(quality: .high).preferredStrategy, .highFidelity)
+        XCTAssertEqual(TranslationSupport.installedSession(source: de, target: en, quality: .high).preferredStrategy, .highFidelity)
+        XCTAssertEqual(TranslationSupport.installedSession(source: de, target: en).preferredStrategy, .lowLatency)
+    }
+
+    func testHighQualityTranslatesIfAvailable() async throws {
+        guard TranslationSupport.highFidelityFallbackReason() == nil else {
+            throw XCTSkip("highFidelity unavailable: \(TranslationSupport.highFidelityFallbackReason() ?? "")")
+        }
+        let manager = ModelManager(quiet: true, quality: .high)
+        let de = Locale.Language(identifier: "de")
+        let en = Locale.Language(identifier: "en")
+
+        guard await manager.status(source: de, target: en) == .installed else {
+            throw XCTSkip("de-en highFidelity model is not installed")
+        }
+
+        let translator = AppleTranslator(quality: .high)
+        try await translator.prepare(source: de, target: en, noInstall: true, quiet: true)
+        let english = try await translator.translate(
+            units: ["Der Hund schläft im Garten. Siehe `make test` und https://example.com/a."],
+            source: de,
+            target: en,
+            preserveNewlines: true
+        )
+
+        XCTAssertEqual(english.count, 1)
+        XCTAssertTrue(english[0].lowercased().contains("dog"), english[0])
+        XCTAssertTrue(english[0].contains("`make test`"), english[0])
+        XCTAssertTrue(english[0].contains("https://example.com/a"), english[0])
+    }
+
     func testRoundTripIfModelsInstalled() async throws {
         let manager = ModelManager(quiet: true)
         let de = Locale.Language(identifier: "de")
